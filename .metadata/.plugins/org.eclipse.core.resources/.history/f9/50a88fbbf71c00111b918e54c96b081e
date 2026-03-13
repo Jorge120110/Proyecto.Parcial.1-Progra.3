@@ -1,0 +1,55 @@
+package modelos;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import modelos.LoteDeTransacciones;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
+public class Transaccion {
+
+    // Instanciamos el mapeador de Jackson
+    private final ObjectMapper objectMapper;
+    // URL de la API proporcionada por el docente
+    private final String API_URL = "AQUI_LA_URL_DE_TU_DOCENTE/transacciones";
+
+    public Transaccion() {
+        this.objectMapper = new ObjectMapper();
+        // Si tu JSON tuviera problemas con campos desconocidos en el futuro, 
+        // se puede configurar aquí: objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    /**
+     * Hace la petición GET a la API y convierte el JSON resultante en un objeto Java.
+     */
+    public LoteDeTransacciones obtenerTransacciones() throws Exception {
+        
+        // 1. Configuramos el cliente HTTP (con un timeout por si la API tarda)
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+
+        // 2. Preparamos la solicitud GET
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_URL))
+                .GET()
+                .header("Accept", "application/json")
+                .build();
+
+        // 3. Enviamos la petición y guardamos la respuesta como un String
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // 4. Verificamos que la API respondió con éxito (Código 200 OK)
+        if (response.statusCode() == 200) {
+            // Magia de Jackson: Convierte el String JSON a nuestro objeto estructurado
+            return objectMapper.readValue(response.body(), LoteDeTransacciones.class);
+        } else {
+            // Manejo de errores básico solicitado en la rúbrica
+            throw new RuntimeException("Error al consumir la API. Código HTTP: " + response.statusCode() + 
+                                       " - Respuesta: " + response.body());
+        }
+    }
+}

@@ -1,0 +1,37 @@
+import modelos.LoteDeTransacciones;
+import modelos.Transaccion;
+import Servicio.RabbitMQ;
+import Servicio.TransaccionAPI;
+
+public class main { 
+
+    public static void main(String[] args) {
+        System.out.println("Iniciando Componente A (Producer)...");
+
+        TransaccionAPI apiService = new TransaccionAPI();
+        RabbitMQ rabbitService = new RabbitMQ();
+
+        try {
+            System.out.println("Consultando API externa...");
+            LoteDeTransacciones lote = apiService.obtenerTransacciones();    
+                        
+            if (lote != null && lote.getTransacciones() != null) {
+                System.out.println("Se obtuvieron " + lote.getTransacciones().size() + " transacciones.");
+
+                for (Transaccion tx : lote.getTransacciones()) {
+                	tx.setNombre("Jorge Mario Cano Cobón");
+                    tx.setCarnet("0905-24-10433");
+                	rabbitService.enviarTransaccion(tx);
+                }
+                
+                System.out.println("✅ Proceso Producer finalizado con éxito.");
+            } else {
+                System.out.println("El lote recibido está vacío o es nulo.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Ocurrió un error crítico: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}

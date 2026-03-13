@@ -1,0 +1,51 @@
+import com.rabbitmq.client.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import modelos.Transaccion;
+import Servicio.TransaccionPostAPI;
+
+public class mainConsumer {
+    private static final String[] COLAS = {"BANRURAL", "BAC", "BI"};
+
+    public static void main(String[] args) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        factory.setUsername("guest");
+        factory.setPassword("guest");
+
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        ObjectMapper mapper = new ObjectMapper();
+        TransaccionPostAPI apiPost = new TransaccionPostAPI();
+
+        System.out.println("Esperando transacciones en las colas...");
+
+        for (String nombreCola : COLAS) {
+            channel.queueDeclare(nombreCola, true, false, false, null);
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                try {
+                    Transaccion tx = mapper.readValue(message, Transaccion.class);
+
+                    tx.setNombre("Jorge Mario Cano Cobón");
+                    tx.setCarnet("0905-24-10433");
+
+                    if (apiPost.enviarAPost(tx)) {
+                        System.out.println("Guardado con éxito: " + tx.getIdTransaccion());
+                        
+                        channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                    } else {
+                        System.err.println("Falló el POST para: " + tx.getIdTransaccion());
+                        
+                        channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+                }
+            };
+            
+            channel.basicConsume(nombreCola, false, deliverCallback, consumerTag -> {});
+        }
+    }
+}

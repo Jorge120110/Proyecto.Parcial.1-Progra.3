@@ -1,0 +1,40 @@
+package Servicio; 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import modelos.Transaccion;
+
+public class RabbitMQ {
+
+    private final ConnectionFactory factory;
+    private final ObjectMapper objectMapper;
+
+    public RabbitMQ() {
+        this.factory = new ConnectionFactory();
+        this.factory.setHost("localhost");
+        this.factory.setUsername("guest");
+        this.factory.setPassword("guest");
+        this.objectMapper = new ObjectMapper();
+    }
+
+    public void enviarTransaccion(Transaccion transaccion) {
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+            String nombreCola = transaccion.getBancoDestino();
+            
+            channel.queueDeclare(nombreCola, true, false, false, null);
+
+            String mensajeJson = objectMapper.writeValueAsString(transaccion);
+            channel.basicPublish("", nombreCola, null, mensajeJson.getBytes());
+
+            System.out.println(" [x] Enviado a cola '" + nombreCola + "': ID " + transaccion.getIdTransaccion());
+
+        } catch (Exception e) {
+            System.err.println(" [!] Error al enviar transacción a RabbitMQ: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}

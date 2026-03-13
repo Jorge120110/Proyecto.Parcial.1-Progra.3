@@ -1,0 +1,11 @@
+INDEX VERSION 1.134+C:\Users\jorge\OneDrive\Desktop\Progra III\Proyecto Rabbit MQ - Parcial 1\.metadata\.plugins\org.eclipse.jdt.core
+3967615562.index
+3681048427.index
+4281823787.index
+1815344868.index
+3878664990.index
+1865797976.index
+312328239.index
+1717440603.index
+2154416905.index
+1602509062.index

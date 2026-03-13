@@ -1,0 +1,45 @@
+package modelos;
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import modelos.LoteDeTransacciones;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
+public class Transaccion{
+
+    private final ObjectMapper objectMapper;
+    private final String API_URL = "AQUI_LA_URL_DE_TU_DOCENTE/transacciones";
+
+    public Transaccion() {
+        this.objectMapper = new ObjectMapper();
+      
+    }
+
+    
+    public LoteDeTransacciones obtenerTransacciones() throws Exception {
+         
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_URL))
+                .GET()
+                .header("Accept", "application/json")
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return objectMapper.readValue(response.body(), LoteDeTransacciones.class);
+        } else {
+            throw new RuntimeException("Error al consumir la API. Código HTTP: " + response.statusCode() + 
+                                       " - Respuesta: " + response.body());
+        }
+    }
+}
