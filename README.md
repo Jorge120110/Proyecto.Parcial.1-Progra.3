@@ -1,3 +1,5 @@
+## Rama con cambios requeridos para el parcial
+
 # Proyecto RabbitMQ - Parcial 1
 
 Este proyecto es un sistema de mensajería de transacciones bancarias que conecta una API externa con una base de datos en AWS mediante **RabbitMQ**.
